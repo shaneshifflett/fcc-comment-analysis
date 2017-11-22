@@ -57,7 +57,16 @@ def source(comment):
         return
 
     if comment['text_data'].startswith('The unprecedented regulatory power the Obama Administration imposed on the internet'):
-        return 'bot.unprecedented'
+        return 'bot.alliance'
+    
+    if 'as a concerned taxpayer and consumer, i am writing to urge the fcc to set the internet free and remove the' in comment['text_data'].lower():
+        return 'bot.masoncity'
+    
+    if 'depression-era regulatory framework' in comment['text_data'].lower():
+        return 'bot.depression'
+    
+    if 'as an etsy seller' in comment['text_data'].lower():
+        reutrn 'form.etsy'
 
     if comment['text_data'].startswith('I was outraged by the Obama/Wheeler FCC'):
         return 'bot.outraged'
@@ -191,7 +200,7 @@ def analyze(comment):
         'fingerprint': fingerprint(comment),
         'fulladdress': fulladdress(comment),
         'capsemail': capsemail(comment),
-        # 'titleii': titleii(comment),
+        'protitleii': titleii(comment),
         'source': source(comment),
         'proceedings_keys': proceeding_keys(comment),
         'onsite': onsite(comment),
