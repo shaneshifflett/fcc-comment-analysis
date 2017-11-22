@@ -40,9 +40,12 @@ class CommentIndexer:
             total = 5000000
         progress = tqdm(total=total)
 
-        for comment in self.iter_comments():
-            index_queue.put(comment)
-            progress.update(1)
+        #for comment in self.iter_comments():
+        with open('/home/shane/fcc-comment-analysis/data/2918000.json') as data_file:    
+                data = json.load(data_file)
+                for comment in data['filings']:
+                    index_queue.put(comment)
+                    progress.update(1)
 
         index_queue.put(None)
         bulk_index_process.join()
@@ -106,11 +109,13 @@ class CommentIndexer:
             'fcc-comments',
             '_bulk'
         )
-
+        print('ENDPOINT', endpoint)
         payload = io.StringIO()
         payload_size = 0
         created = False
 
+        headers = headers = {'Content-type': 'application/x-ndjson', 'Accept': 'text/plain'}
+        
         while True:
             document = queue.get()
             if document is None:
@@ -130,7 +135,8 @@ class CommentIndexer:
             if payload_size > 8 * 1024 * 1024:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    response = requests.post(endpoint, data=payload.getvalue(), verify=self.verify)
+                    #response = requests.post(endpoint, data=payload.getvalue(), verify=self.verify)
+                    response = requests.post(endpoint, data=payload.getvalue(), verify=self.verify, headers=headers)
                     if response == 413:
                         raise Exception('Too large!')
                     payload = io.StringIO()
@@ -141,9 +147,10 @@ class CommentIndexer:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            response = requests.post(endpoint, data=payload.getvalue(), verify=self.verify)
+            response = requests.post(endpoint, data=payload.getvalue(), verify=self.verify, headers=headers)
             payload = io.StringIO()
             payload_size = 0
+            print('JSON', response.json())
             for item in response.json()['items']:
                 if item['create']['status'] == 201:
                     created = True

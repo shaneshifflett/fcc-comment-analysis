@@ -79,7 +79,8 @@ class CommentAnalyzer:
             if counter % size == 0:
                 with warnings.catch_warnings():
                     warnings.simplefilter("ignore")
-                    response = requests.post(url, data=payload.getvalue(), verify=self.verify)
+                    theaders = {'Content-type': 'application/x-ndjson', 'Accept': 'text/plain'}
+                    response = requests.post(url, data=payload.getvalue(), verify=self.verify, headers=theaders)
                     if 'items' not in response.json():
                         print(response.json())
                     else:
@@ -102,7 +103,8 @@ class CommentAnalyzer:
 
         with warnings.catch_warnings():
             warnings.simplefilter("ignore")
-            response = requests.post(start_url, verify=self.verify, headers=headers, data=json.dumps({
+            #response = requests.post(start_url, verify=self.verify, headers=headers, json=json.dumps({
+            response = requests.post(start_url, verify=self.verify, json={
                 'size': size,
                 'query': {
                     'match_all': {}
@@ -110,7 +112,7 @@ class CommentAnalyzer:
                 'sort': [
                     '_doc'
                 ]
-            }))
+            })
         scroll_id = response.json()['_scroll_id']
         progress = tqdm(total=response.json()['hits']['total'])
         hits = response.json()['hits']['hits']
@@ -123,11 +125,12 @@ class CommentAnalyzer:
 
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                response = requests.post(scroll_url, headers=headers, verify=self.verify, data=json.dumps({
-                    'scroll': timeout,
-                    'scroll_id': scroll_id
-                }))
-
+                #response = requests.post(scroll_url, headers=headers, verify=self.verify, data=json.dumps({
+                data = {
+                        'scroll': timeout,
+                        'scroll_id': scroll_id
+                        }
+                response = requests.post(scroll_url, verify=self.verify, json=data)
             scroll_id = response.json()['_scroll_id']
             hits = response.json()['hits']['hits']
 
